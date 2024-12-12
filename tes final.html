@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taksasi Buah Sawit</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container py-5">
+    <div class="text-center mb-4">
+        <h1 class="fw-bold mt-3">Project Collaboration Innovation</h1>
+    </div>
+    
+    <div class="card shadow-lg p-4">
+        <form id="taksasiForm">
+            <div class="mb-3">
+                <label for="tanggal" class="form-label">Pilih Tanggal</label>
+                <input type="date" id="tanggal" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="divisi" class="form-label">Pilih Divisi</label>
+                <select id="divisi" class="form-select" required>
+                    <option value="" selected disabled>Pilih Divisi</option>
+                    <option value="I">Divisi 1</option>
+                    <option value="II">Divisi 2</option>
+                    <option value="III">Divisi 3</option>
+                    <option value="IV">Divisi 4</option>
+                </select>
+            </div>
+
+            <div class="mb-3 d-none" id="blokContainer">
+                <label class="form-label">Blok yang Dipanen</label>
+                <div id="blok" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2"></div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="akp" class="form-label">AKP (Angka Kerapatan Panen)</label>
+                    <input type="number" id="akp" class="form-control" min="0" step="0.01" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="bjr" class="form-label">BJR (Berat Janjang Rata-rata)</label>
+                    <input type="number" id="bjr" class="form-control" min="0" step="0.01" required>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="pusingan" class="form-label">Pusingan</label>
+                    <input type="text" id="pusingan" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="seksi" class="form-label">Seksi</label>
+                    <input type="text" id="seksi" class="form-control" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-3">Hitung</button>
+            <button type="reset" class="btn btn-secondary w-100">Reset</button>
+        </form>
+
+        <div id="hasilTaksasi" class="alert alert-info d-none mt-4">
+            <button class="btn btn-secondary btn-sm float-end" id="copyToClipboard">Salin</button>
+            <div id="hasilContent"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const blokData = {
+    "I": {
+        "T35": { luas: 38.46, sph: 131 }, "T36": { luas: 26.59, sph: 124 },
+        "U35": { luas: 40.28, sph: 120 }, "U43": { luas: 28.78, sph: 127 },
+        "U44": { luas: 38.72, sph: 131 }, "U45": { luas: 38.72, sph: 134 },
+        "U46": { luas: 39.44, sph: 127 }, "V35": { luas: 13.86, sph: 116 },
+        "V36": { luas: 16.71, sph: 130 }, "V37": { luas: 22.55, sph: 128 },
+        "V38": { luas: 22.19, sph: 131 }, "V41": { luas: 22.54, sph: 135 },
+        "V42": { luas: 23.24, sph: 135 }, "V43": { luas: 27.8, sph: 125 },
+        "V44": { luas: 35.23, sph: 125 }, "U36": { luas: 26.25, sph: 133 },
+        "V40": { luas: 16.57, sph: 128 }, "V46": { luas: 17.05, sph: 128 },
+        "V47": { luas: 24.24, sph: 133 }, "T43": { luas: 33.55, sph: 132 },
+        "V39": { luas: 30.25, sph: 135 }, "T42": { luas: 11.23, sph: 159 },
+        "V45": { luas: 37.25, sph: 127 }
+    },
+    "II": {
+        "T44": { luas: 37.76, sph: 120 }, "U47": { luas: 20.7, sph: 134 },
+        "T45": { luas: 38.84, sph: 128 }, "T47": { luas: 20.09, sph: 133 },
+        "U48": { luas: 40.08, sph: 133 }, "U49": { luas: 39.95, sph: 134 },
+        "U50": { luas: 39.9, sph: 135 }, "U51": { luas: 39.28, sph: 135 },
+        "U52": { luas: 39.72, sph: 134 }, "U53": { luas: 38.89, sph: 130 },
+        "U54": { luas: 39.37, sph: 133 }, "U55": { luas: 39.05, sph: 130 },
+        "T52": { luas: 39.7, sph: 116 }, "T53": { luas: 39.75, sph: 113 },
+        "T54": { luas: 39.26, sph: 131 }, "U56": { luas: 34.73, sph: 151 },
+        "T46": { luas: 38.96, sph: 133 }, "V54": { luas: 13.87, sph: 135 }
+    },
+    "III": {
+        "T56": { luas: 34.83, sph: 149 }, "T58": { luas: 40.66, sph: 135 },
+        "U57": { luas: 44.4, sph: 132 }, "U58": { luas: 36.33, sph: 145 },
+        "U59": { luas: 31.6, sph: 157 }, "S57": { luas: 38.34, sph: 132 },
+        "S58": { luas: 38.85, sph: 136 }, "T57": { luas: 39.95, sph: 144 },
+        "U60": { luas: 19.84, sph: 166 }, "S59": { luas: 31, sph: 134 },
+        "T60": { luas: 35.92, sph: 134 }, "T61": { luas: 20.61, sph: 156 },
+        "T59": { luas: 39.21, sph: 167 }, "U61": { luas: 24.33, sph: 114 }
+    },
+    "IV": {
+        "R54": { luas: 22.7, sph: 153 }, "S50": { luas: 17.69, sph: 136 },
+        "S51": { luas: 35.4, sph: 135 }, "Q59": { luas: 23.19, sph: 132 },
+        "R55": { luas: 18.62, sph: 129 }, "R56": { luas: 27.83, sph: 131 },
+        "S52": { luas: 30.27, sph: 134 }, "S54": { luas: 38.68, sph: 140 },
+        "S55": { luas: 41.54, sph: 147 }, "Q60": { luas: 7.73, sph: 142 },
+        "R57": { luas: 35.33, sph: 134 }, "R58": { luas: 38.79, sph: 128 },
+        "R59": { luas: 39.58, sph: 131 }, "S59": { luas: 14.53, sph: 181 },
+        "S53": { luas: 37.05, sph: 140 }, "Q57": { luas: 13.29, sph: 133 },
+        "Q58": { luas: 30.05, sph: 140 }, "Q61": { luas: 24.13, sph: 159 },
+        "R60": { luas: 34.36, sph: 145 }, "R61": { luas: 14.74, sph: 52 },
+        "R62": { luas: 22.93, sph: 30 }, "S60": { luas: 32.03, sph: 142 },
+        "S61": { luas: 28.29, sph: 128 }, "S62": { luas: 32.14, sph: 81 }
+    }
+};
+
+
+function salinTeks(teks) {
+    navigator.clipboard.writeText(teks).then(() => {
+        alert('Teks berhasil disalin!');
+    }, () => {
+        alert('Gagal menyalin teks.');
+    });
+}
+
+document.getElementById('divisi').addEventListener('change', function () {
+    const divisi = this.value;
+    const blokContainer = document.getElementById('blok');
+    blokContainer.innerHTML = "";
+
+    if (blokData[divisi]) {
+        for (const [blok, data] of Object.entries(blokData[divisi])) {
+            const checkbox = `
+                <div class="col">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${blok}" id="blok${blok}">
+                        <label class="form-check-label" for="blok${blok}">${blok}</label>
+                    </div>
+                </div>
+            `;
+            blokContainer.insertAdjacentHTML('beforeend', checkbox);
+        }
+        document.getElementById('blokContainer').classList.remove('d-none');
+    }
+});
+
+document.getElementById('taksasiForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const tanggalInput = document.getElementById('tanggal').value; 
+    if (!tanggalInput) {
+        alert('Pilih tanggal terlebih dahulu!');
+        return;
+    }
+
+    // Format tanggal
+    const [tahun, bulan, tanggal] = tanggalInput.split('-');
+    const tanggalFormatted = `${tanggal}-${bulan}-${tahun}`;
+
+    const selectedDivisi = document.getElementById('divisi').value;
+    const selectedBlocks = Array.from(document.querySelectorAll('#blok .form-check-input:checked')).map(cb => cb.value);
+    const akp = parseFloat(document.getElementById('akp').value);
+    const bjr = parseFloat(document.getElementById('bjr').value);
+    const pusingan = document.getElementById('pusingan').value;
+    const seksi = document.getElementById('seksi').value;
+
+    if (!selectedBlocks.length) {
+        alert('Pilih setidaknya satu blok.');
+        return;
+    }
+
+    let totalLuas = 0, totalPokok = 0, totalSph = 0;
+    selectedBlocks.forEach(blok => {
+        const blokInfo = blokData[selectedDivisi][blok];
+        totalLuas += blokInfo.luas;
+        totalPokok += Math.round(blokInfo.luas * blokInfo.sph);
+        totalSph += blokInfo.sph;
+    });
+
+    const estimasiJjg = Math.round(totalPokok * akp / 100);
+    const estimasiBeratKg = Math.round(estimasiJjg * bjr);
+    const rit = Math.ceil(estimasiBeratKg / 7000);
+
+    const hasil = `
+        Taksasi panen tgl = ${tanggalFormatted}
+        Divisi ${selectedDivisi}
+        _______________________
+        Blok = ${selectedBlocks.join(', ')}
+        Luas = ${totalLuas.toFixed(2)}ha
+        SPH = ${Math.ceil(totalSph / selectedBlocks.length)} pkk
+        Pkk = ${totalPokok} pkk
+        Akp = ${akp}%
+        Jjg. = ${estimasiJjg} jjg
+        Bjr. = ${bjr} kg
+        Kg. = ${estimasiBeratKg} kg
+        TK = 36
+        Pusingan = ${pusingan}
+        Seksi = ${seksi}
+        Pengiriman = ${rit} rit
+    `;
+
+    document.getElementById('hasilContent').innerText = hasil.trim();
+    document.getElementById('hasilTaksasi').classList.remove('d-none');
+
+    document.getElementById('copyToClipboard').addEventListener('click', () => salinTeks(hasil.trim()));
+});
+
+</script>
+</body>
+</html>
